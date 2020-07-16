@@ -1,11 +1,14 @@
 package ufpb.minicurso.lab2.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 
 @Entity
 public class Course {
-    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id @GeneratedValue
     private long id;
+    @JsonProperty("nome")
     private String name;
     private double score;
 
@@ -13,7 +16,15 @@ public class Course {
     private int likes;
 
     public Course(){
+        super();
+    }
 
+    public Course(long id, String name, double score, String commentary, int likes) {
+        this.id = id;
+        this.name = name;
+        this.score = score;
+        this.commentary = commentary;
+        this.likes = likes;
     }
 
     public String getCommentary() {
@@ -21,7 +32,7 @@ public class Course {
     }
 
     public void setCommentary(String comment) {
-        this.commentary = comment + "\n";
+        this.commentary = comment;
     }
 
     public int getLikes() {

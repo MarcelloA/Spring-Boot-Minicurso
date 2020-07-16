@@ -8,6 +8,7 @@ import ufpb.minicurso.lab2.entities.Course;
 import ufpb.minicurso.lab2.services.CourseServices;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 public class CourseController {
@@ -15,43 +16,48 @@ public class CourseController {
     @Autowired
     private CourseServices courseServices;
 
-    @PostMapping("/v1/api/disciplinas")
-    public ResponseEntity<Course> setCourse(@RequestBody Course newCourse) {
-        try {return new ResponseEntity<Course>(courseServices.setCourse(newCourse), HttpStatus.OK);
-        } catch (IllegalArgumentException e){
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
-        }
-    }
-
-    @GetMapping("/v1/api/disciplinas")
+    @GetMapping("/api/disciplinas")
     public ResponseEntity<List<Course>> getCourses(){
         return new ResponseEntity<List<Course>>(courseServices.getCourse(), HttpStatus.OK);
     }
 
-    @GetMapping("/v1/api/disciplinas/{id}")
+    @GetMapping("/api/disciplinas/{id}")
     public ResponseEntity<Course> getCourse(@PathVariable long id){
-        return new ResponseEntity<Course>(courseServices.getCourse(id), HttpStatus.OK);
-    }
-
-    @PutMapping("/v1/api/disciplinas/{id}/nome")
-    public ResponseEntity<Course> setCourse(@PathVariable long id, @RequestBody String nome){
-        try {
-            return new ResponseEntity<Course>(courseServices.setCourse(nome, id),HttpStatus.OK);
-        } catch (ArrayIndexOutOfBoundsException e){
+        try{
+            return new ResponseEntity<Course>( courseServices.getCourse(id).get(), HttpStatus.OK);
+        } catch (NoSuchElementException e){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
-    @PutMapping("/v1/api/disciplinas/{id}/nota")
+    @PutMapping("/api/disciplinas/likes/{id}/")
+    public ResponseEntity<Course> setCourseLikes(@PathVariable long id){
+        try {
+            return new ResponseEntity<Course>(courseServices.setCourseLike(id),HttpStatus.OK);
+        }catch (NoSuchElementException e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/api/disciplinas/nota/{id}/")
     public ResponseEntity<Course> setCourseScore(@PathVariable long id, @RequestBody String nota){
         try {
             return new ResponseEntity<Course>(courseServices.setCourseScore(nota, id),HttpStatus.OK);
-        }catch (ArrayIndexOutOfBoundsException e){
+        }catch (NoSuchElementException e){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
-    @DeleteMapping("/v1/api/disciplinas/{id}")
+    @PutMapping("/api/disciplinas/comentarios/{id}")
+    public ResponseEntity<Course> setCourseComment(@PathVariable long id, @RequestBody String comentarios){
+        try {
+            return new ResponseEntity<Course>(courseServices.setCourseComment(id, comentarios), HttpStatus.OK);
+        } catch (NoSuchElementException e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @DeleteMapping("/api/disciplinas/{id}")
     public ResponseEntity<Course> removeCourse(@PathVariable long id){
         try {
             return new ResponseEntity<Course>(courseServices.removeCourse(id), HttpStatus.OK);
@@ -60,11 +66,20 @@ public class CourseController {
         }
     }
 
-    @GetMapping("/v1/api/disciplinas/ranking")
-    public ResponseEntity<List<Course>> sortCourses(){
+    @GetMapping("/api/disciplinas/ranking/notas")
+    public ResponseEntity<List<Course>> sortCoursesByScore(){
         try {
-            return new ResponseEntity<List<Course>>(courseServices.sortCourses(), HttpStatus.OK);
+            return new ResponseEntity<>(courseServices.sortCoursesByScore(), HttpStatus.OK);
         }catch (ClassCastException e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/api/disciplinas/ranking/likes")
+    public ResponseEntity<List<Course>> sortCoursesByLikes(){
+        try {
+            return new ResponseEntity<>(courseServices.sortCoursesByLikes(), HttpStatus.OK);
+        } catch (ClassCastException e){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
