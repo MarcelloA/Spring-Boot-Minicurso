@@ -2,6 +2,7 @@ package ufpb.minicurso.lab3.filter;
 
 import io.jsonwebtoken.*;
 import org.springframework.web.filter.GenericFilterBean;
+import ufpb.minicurso.lab3.service.JwtService;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -14,7 +15,7 @@ import java.util.Optional;
 
 public class TokenFilter extends GenericFilterBean {
 
-    private final static int TOKEN_INDEX = 7;
+    public final static int TOKEN_INDEX = 7;
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
@@ -30,7 +31,7 @@ public class TokenFilter extends GenericFilterBean {
         String token = header.get().substring(TOKEN_INDEX);
 
         try {
-            Jwts.parser().setSigningKey("cryptic writings").parseClaimsJws(token).getBody();
+            Jwts.parser().setSigningKey(JwtService.TOKEN_KEY).parseClaimsJws(token).getBody();
         } catch (SignatureException | ExpiredJwtException | MalformedJwtException | PrematureJwtException | UnsupportedJwtException | IllegalArgumentException e){
             ((HttpServletResponse) servletResponse).sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
 

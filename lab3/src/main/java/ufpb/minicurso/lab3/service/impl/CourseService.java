@@ -11,6 +11,7 @@ import ufpb.minicurso.lab3.repository.CourseRepository;
 import ufpb.minicurso.lab3.service.interfaces.CourseServiceInterface;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -25,7 +26,12 @@ public class CourseService implements CourseServiceInterface {
 
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private UserService userService;
+
     private List<Course> course;
+
     public CourseService(){}
 
     @PostConstruct
@@ -57,49 +63,51 @@ public class CourseService implements CourseServiceInterface {
     }
 
     @Override
-    public Course setCourseLike(long id){
-        if(courseRepository.findById(id).isEmpty()) throw new NoSuchElementException();
+    public Course setCourseLike(long id, String header, String email) throws ServletException {
+        if(getCourse(id).isEmpty()) throw new NoSuchElementException();
 
-        int numberOfLikes = getCourse(id).get().getLikes();
-        getCourse(id).get().setLikes(numberOfLikes+1);
-
-        courseRepository.save(getCourse(id).get());
-
-        return getCourse(id).get();
+        if(userService.hasPermission(header, email)){
+            int numberOfLikes = getCourse(id).get().getLikes();
+            getCourse(id).get().setLikes(numberOfLikes+1);
+            courseRepository.save(getCourse(id).get());
+            return getCourse(id).get();
+        }
+        return null;
     }
 
 //    TODO: Tratar caso usuário envie nota inválida
     @Override
-    public Course setCourseScore(String scoreField, long id){
-        if(courseRepository.findById(id).isEmpty()) throw new NoSuchElementException();
+    public Course setCourseScore(long id,String scoreField, String header, String email)
+            throws ServletException {
+        if(getCourse(id).isEmpty()) throw new NoSuchElementException();
 
-        JSONObject obj = (JSONObject) JSONValue.parse(scoreField);
-        double score = (double) obj.get("score");
-
-        getCourse(id).get().setScore(score);
-
-        courseRepository.save(getCourse(id).get());
-
-        return getCourse(id).get();
+        if(userService.hasPermission(header, email)){
+            double score = (double) JSONValue.parse(scoreField);
+            getCourse(id).get().setScore(score);
+            courseRepository.save(getCourse(id).get());
+            return getCourse(id).get();
+        }
+        return null;
     }
 
     @Override
-    public Course setCourseComment(long id, String comment){
-        if(courseRepository.findById(id).isEmpty()) throw new NoSuchElementException();
+    public Course setCourseComment(long id, String comment, String header, String email)
+            throws ServletException {
+        if(getCourse(id).isEmpty()) throw new NoSuchElementException();
 
-        JSONObject obj = (JSONObject) JSONValue.parse(comment);
-        String commentary = (String) obj.get("commentary");
+        if(userService.hasPermission(header, email)){
+            String commentary = comment;
+            String oldCommentaries = getCourse(id).get().getCommentary();
 
-        String oldCommentaries = getCourse(id).get().getCommentary();
-        if(oldCommentaries == null){
-            getCourse(id).get().setCommentary(commentary);
-        } else {
-            getCourse(id).get().setCommentary(oldCommentaries + System.lineSeparator() + commentary);
+            if(oldCommentaries == null){
+                getCourse(id).get().setCommentary(commentary);
+            } else {
+                getCourse(id).get().setCommentary(oldCommentaries + System.lineSeparator() + commentary);
+            }
+            courseRepository.save(getCourse(id).get());
+            return getCourse(id).get();
         }
-
-        courseRepository.save(getCourse(id).get());
-
-        return getCourse(id).get();
+        return null;
     }
 
     @Override

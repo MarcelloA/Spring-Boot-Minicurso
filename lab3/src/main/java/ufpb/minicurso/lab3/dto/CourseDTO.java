@@ -1,10 +1,14 @@
 package ufpb.minicurso.lab3.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import ufpb.minicurso.lab3.entity.Course;
 
-@Getter
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Data
 public class CourseDTO {
 
     @JsonProperty("nome")

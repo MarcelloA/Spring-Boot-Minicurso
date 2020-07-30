@@ -4,27 +4,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ufpb.minicurso.lab3.dto.UserAuthDTO;
 import ufpb.minicurso.lab3.entity.Course;
+import ufpb.minicurso.lab3.service.JwtService;
 import ufpb.minicurso.lab3.service.impl.CourseService;
 
+import javax.servlet.ServletException;
+import javax.validation.Valid;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-// todo: DTO para Course
-// todo: criar exceptions e controllerAdvisor
-
 @RestController
+@RequestMapping("/api/disciplinas")
 public class CourseController {
 
     @Autowired
     private CourseService courseService;
 
-    @GetMapping("/api/disciplinas")
+    @GetMapping()
     public ResponseEntity<List<Course>> getCourses(){
         return new ResponseEntity<>(courseService.getCourse(), HttpStatus.OK);
     }
 
-    @GetMapping("/api/disciplinas/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Course> getCourse(@PathVariable("id") long id){
         try{
             return new ResponseEntity<>( courseService.getCourse(id).get(), HttpStatus.OK);
@@ -33,34 +35,49 @@ public class CourseController {
         }
     }
 
-    @PutMapping("/api/disciplinas/likes/{id}/")
-    public ResponseEntity<Course> setCourseLikes(@PathVariable("id") long id){
+    @PutMapping("/likes/{id}/")
+    public ResponseEntity<Course> setCourseLikes(@PathVariable("id") long id,
+                                                 @RequestHeader("Authorization") String header,
+                                                 @Valid @RequestBody UserAuthDTO userAuthDTO){
         try {
-            return new ResponseEntity<>(courseService.setCourseLike(id),HttpStatus.OK);
+            return new ResponseEntity<>(courseService.setCourseLike(id, header, userAuthDTO.getEmail()),HttpStatus.OK);
         }catch (NoSuchElementException e){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (ServletException e){
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
     }
 
-    @PutMapping("/api/disciplinas/nota/{id}/")
-    public ResponseEntity<Course> setCourseScore(@PathVariable long id, @RequestBody String nota){
+    @PutMapping("/nota/{id}/")
+    public ResponseEntity<Course> setCourseScore(@PathVariable long id,
+                                                 @RequestHeader("Authorization") String header,
+                                                 @Valid @RequestBody UserAuthDTO userAuthDTO){
+
         try {
-            return new ResponseEntity<>(courseService.setCourseScore(nota, id),HttpStatus.OK);
+            return new ResponseEntity<>(courseService.setCourseScore(id, userAuthDTO.getScore(),
+                    header, userAuthDTO.getEmail()),HttpStatus.OK);
         }catch (NoSuchElementException e){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (ServletException e){
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
     }
 
-    @PutMapping("/api/disciplinas/comentarios/{id}")
-    public ResponseEntity<Course> setCourseComment(@PathVariable long id, @RequestBody String comentarios){
+    @PutMapping("/comentarios/{id}")
+    public ResponseEntity<Course> setCourseComment(@PathVariable long id,
+                                                   @RequestHeader("Authorization") String header,
+                                                   @Valid @RequestBody UserAuthDTO userAuthDTO){
         try {
-            return new ResponseEntity<>(courseService.setCourseComment(id, comentarios), HttpStatus.OK);
+            return new ResponseEntity<>(courseService.setCourseComment(id, userAuthDTO.getCommentary(),
+                    header, userAuthDTO.getEmail()), HttpStatus.OK);
         } catch (NoSuchElementException e){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (ServletException e){
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
     }
 
-    @DeleteMapping("/api/disciplinas/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Course> removeCourse(@PathVariable long id){
         try {
             return new ResponseEntity<>(courseService.removeCourse(id), HttpStatus.OK);
@@ -69,7 +86,7 @@ public class CourseController {
         }
     }
 
-    @GetMapping("/api/disciplinas/ranking/notas")
+    @GetMapping("/ranking/notas")
     public ResponseEntity<List<Course>> sortCoursesByScore(){
         try {
             return new ResponseEntity<>(courseService.sortCoursesByScore(), HttpStatus.OK);
@@ -78,7 +95,7 @@ public class CourseController {
         }
     }
 
-    @GetMapping("/api/disciplinas/ranking/likes")
+    @GetMapping("/ranking/likes")
     public ResponseEntity<List<Course>> sortCoursesByLikes(){
         try {
             return new ResponseEntity<>(courseService.sortCoursesByLikes(), HttpStatus.OK);
